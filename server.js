@@ -1,6 +1,6 @@
 /********************************************************************************* 
 
-WEB322 – Assignment 04
+WEB322 – Assignment 6
 
 I declare that this assignment is my own work in accordance with Seneca
 Academic Policy. No part of this assignment has been copied manually or 
@@ -20,228 +20,121 @@ GitHub Repository URL: https://github.com/mohdeep12345/Assignment-4.git
 const express = require('express');
 const app = express();
 const path = require('path');
-const storeService = require('./store-service');
+const authServer = require('./auth-server'); // Import the auth server
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const clientSessions = require('client-sessions');
 
 // Configure Cloudinary for image uploads
 cloudinary.config({
-    cloud_name: 'MOHDEEP',  
-    api_key: '319446695579865',       
-    api_secret: 'qtnAGrUvzR8WL5ydJCQpF4qBz9I',  
+    cloud_name: 'MOHDEEP',
+    api_key: '319446695579865',
+    api_secret: 'qtnAGrUvzR8WL5ydJCQpF4qBz9I',
     secure: true
 });
 
 // Set up multer to handle file uploads
-const upload = multer(); // no { storage: storage } since we are not using disk storage
+const upload = multer();
 
+// Middleware for parsing POST requests
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Static files
 app.use(express.static('public'));
+
+// Configure client-sessions middleware
+app.use(clientSessions({
+    cookieName: "session",
+    secret: "assignment6_secure_key",
+    duration: 2 * 60 * 1000, // 2 minutes
+    activeDuration: 1000 * 60 // 1 minute
+}));
+
+// Custom middleware to make session data available to templates
+app.use((req, res, next) => {
+    res.locals.session = req.session;
+    next();
+});
+
+// Helper middleware to ensure a user is logged in
+function ensureLogin(req, res, next) {
+    if (!req.session.user) {
+        res.redirect("/login");
+    } else {
+        next();
+    }
+}
 
 // Routes
 app.get('/', (req, res) => {
     res.redirect('/about');
 });
 
-// About Page
 app.get('/about', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'about.html'));
 });
 
-// Shop Page
 app.get('/shop', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Shop</title>
-            <link rel="stylesheet" href="/css/bootstrap.css"> 
-            <link rel="stylesheet" href="/css/main.css"> 
-        </head>
-        <body>
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">Web322 – Assignment 4 - Mohdeep Singh</a>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/shop">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/items">Items</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/items/add">Add Item</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/categories">Categories</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            <div class="container mt-5">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h2>Shop</h2>
-                        <div id="shop-container"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="footer">
-                <p>&copy; 2024 Mohdeep Singh. All rights reserved.</p>
-            </div>
-            <script src="/js/main.js"></script>
-        </body>
-        </html>
-    `);
+    res.sendFile(path.join(__dirname, 'views', 'shop.html'));
 });
 
-// Categories Page
-app.get('/categories', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Categories</title>
-            <link rel="stylesheet" href="/css/bootstrap.css"> 
-            <link rel="stylesheet" href="/css/main.css"> 
-        </head>
-        <body>
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">Web322 – Assignment 4 - Mohdeep Singh</a>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/shop">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/items">Items</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/items/add">Add Item</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/categories">Categories</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            <div class="container mt-5">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h2>Categories</h2>
-                        <div id="categories-container"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="footer">
-                <p>&copy; 2024 Mohdeep Singh. All rights reserved.</p>
-            </div>
-            <script src="/js/main.js"></script>
-        </body>
-        </html>
-    `);
+app.get('/categories', ensureLogin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'categories.html'));
 });
 
-// Items Page
-app.get('/items', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Items</title>
-            <link rel="stylesheet" href="/css/bootstrap.css"> 
-            <link rel="stylesheet" href="/css/main.css"> 
-        </head>
-        <body>
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">Web322 – Assignment 4 - Mohdeep Singh</a>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/shop">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/items">Items</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/items/add">Add Item</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/categories">Categories</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            <div class="container mt-5">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h2>Items</h2>
-                        <div id="items-container"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="footer">
-                <p>&copy; 2024 Mohdeep Singh. All rights reserved.</p>
-            </div>
-            <script src="/js/main.js"></script>
-        </body>
-        </html>
-    `);
+app.get('/items', ensureLogin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'items.html'));
 });
 
-// Get shop data dynamically
-app.get('/shop-data', (req, res) => {
-    storeService.getPublishedItems()
-        .then(data => res.json(data))
-        .catch(err => res.status(500).json({ message: err }));
-});
-
-// Get all items or filter by category or date
-app.get('/items-data', (req, res) => {
-    if (req.query.category) {
-        storeService.getItemsByCategory(req.query.category)
-            .then(data => res.json(data))
-            .catch(err => res.status(500).json({ message: err }));
-    } else if (req.query.minDate) {
-        storeService.getItemsByMinDate(req.query.minDate)
-            .then(data => res.json(data))
-            .catch(err => res.status(500).json({ message: err }));
-    } else {
-        storeService.getAllItems()
-            .then(data => res.json(data))
-            .catch(err => res.status(500).json({ message: err }));
-    }
-});
-
-// Get categories data dynamically
-app.get('/categories-data', (req, res) => {
-    storeService.getCategories()
-        .then(data => res.json(data))
-        .catch(err => res.status(500).json({ message: err }));
-});
-
-// Add new item route
-app.get('/items/add', (req, res) => {
+app.get('/items/add', ensureLogin, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'addItem.html'));
 });
 
+// Authentication Routes
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'register.html'));
+});
+
+app.post('/register', (req, res) => {
+    authServer.registerUser(req.body) // Use authServer
+        .then(() => res.redirect('/login'))
+        .catch(err => res.status(400).send(`<h2>${err}</h2>`));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    req.body.userAgent = req.get('User-Agent');  // Add user agent information to the request body
+    authServer.checkUser(req.body) // Use authServer
+        .then((user) => {
+            req.session.user = {
+                userName: user.userName,
+                email: user.email,
+                loginHistory: user.loginHistory
+            };
+            res.redirect('/items');
+        })
+        .catch(err => {
+            console.error("Login error:", err);  // Debugging line
+            res.status(400).send(`<h2>${err}</h2>`);
+        });
+});
+
+app.get('/logout', (req, res) => {
+    req.session.reset();
+    res.redirect('/');
+});
+
+app.get('/userHistory', ensureLogin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'userHistory.html'));
+});
+
 // Handle item submission
-app.post('/items/add', upload.single("featureImage"), (req, res) => {
+app.post('/items/add', upload.single("featureImage"), ensureLogin, (req, res) => {
     if (req.file) {
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
@@ -261,7 +154,6 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
 
         async function upload(req) {
             let result = await streamUpload(req);
-            console.log(result);
             return result;
         }
 
@@ -276,20 +168,8 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
 
     function processItem(imageUrl) {
         req.body.featureImage = imageUrl;
-
-        storeService.addItem(req.body).then(() => {
-            res.redirect('/items');
-        }).catch(err => {
-            res.status(500).send("Unable to add item");
-        });
+        res.redirect('/items');
     }
-});
-
-// Get specific item by ID
-app.get('/item/:id', (req, res) => {
-    storeService.getItemById(req.params.id)
-        .then(data => res.json(data))
-        .catch(err => res.status(500).json({ message: err }));
 });
 
 // 404 Route
@@ -300,10 +180,10 @@ app.use((req, res) => {
 // Start the server
 const PORT = process.env.PORT || 8080;
 
-storeService.initialize()
+Promise.all([authServer.initialize()]) // Removed storeServer initialization
     .then(() => {
         app.listen(PORT, () => {
-            console.log(`Express http server listening on port ${PORT}`);
+            console.log(`Server listening on port ${PORT}`);
         });
     })
     .catch(err => {

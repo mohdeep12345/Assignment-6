@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User History</title>
+    <!-- Include Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-600 p-4">
+        <div class="max-w-screen-xl mx-auto flex items-center justify-between">
+            <a href="#" class="text-white text-2xl font-bold">Web322 – Assignment 4 - Mohdeep Singh</a>
+            <div class="space-x-4">
+                <a href="/shop" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Shop</a>
+                <a href="/about" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">About</a>
+                <a href="/items" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Items</a>
+                <a href="/items/add" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Add Item</a>
+                <a href="/categories" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Categories</a>
+                <a href="/login" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Log In</a>
+                <a href="/register" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User History -->
+    <div class="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+        <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">User History</h2>
+        <p class="text-lg text-gray-600 mb-4">Below is the list of your recent login history and activities.</p>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                <thead>
+                    <tr class="text-left bg-gray-200 text-gray-700">
+                        <th class="px-6 py-3 border-b">#</th>
+                        <th class="px-6 py-3 border-b">Login Time</th>
+                        <th class="px-6 py-3 border-b">User Agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example data, replace with dynamic content -->
+                    <tr class="odd:bg-gray-50">
+                        <td class="px-6 py-3 border-b">1</td>
+                        <td class="px-6 py-3 border-b">2024-12-06 10:00:00</td>
+                        <td class="px-6 py-3 border-b">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36</td>
+                    </tr>
+                    <tr class="even:bg-gray-50">
+                        <td class="px-6 py-3 border-b">2</td>
+                        <td class="px-6 py-3 border-b">2024-12-05 14:25:45</td>
+                        <td class="px-6 py-3 border-b">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36</td>
+                    </tr>
+                    <!-- End example data -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 text-center">
+            <a href="/items" class="text-blue-600 hover:underline">Back to Items</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-4 text-center mt-10">
+        <p>&copy; 2024 Mohdeep Singh. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
